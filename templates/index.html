@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALFRED — Batcomputer Command Terminal</title>
+    <meta name="description" content="Wayne Enterprises // Secure Batcomputer Neural Network. Powered by Groq ultra-low latency compute.">
+
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Highlight.js for Batcomputer Code Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/hardcore.min.css">
+
+    <!-- App Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="batcomputer-body">
+
+    <!-- ==========================================
+         GOTHAM NIGHT ENVIRONMENT & ATMOSPHERE
+         ========================================== -->
+    <div class="gotham-environment" id="gothamEnv">
+        <!-- Subtle Canvas Rain (lightweight) -->
+        <canvas id="gothamRainCanvas" class="gotham-rain-canvas"></canvas>
+
+        <!-- Distant Gotham Red Bat-Signal -->
+        <div class="distant-batsignal red-signal">
+            <div class="batsignal-beam red-beam"></div>
+            <div class="batsignal-core">
+                <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Bat-Signal" class="batsignal-img-glow">
+            </div>
+        </div>
+
+        <!-- Gotham Skyline Silhouette & Fog -->
+        <div class="gotham-skyline-silhouette"></div>
+        <div class="batcave-crimson-vignette"></div>
+        <div class="cave-scanlines"></div>
+        <div class="lightning-flash-overlay" id="lightningFlash"></div>
+    </div>
+
+    <!-- Custom Subtle Tactical Targeting Reticle / Cursor (Desktop only) -->
+    <div class="tactical-cursor-dot" id="tacticalCursor"></div>
+
+    <!-- ==========================================
+         BATCOMPUTER BOOT SEQUENCE OVERLAY
+         ========================================== -->
+    <div class="boot-sequence-overlay hidden" id="bootOverlay">
+        <div class="boot-hud-container">
+            <div class="boot-bat-emblem">
+                <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Batcomputer Core" class="boot-logo-img">
+            </div>
+            <div class="boot-text-console" id="bootConsole">
+                <div class="boot-line active">INITIALIZING BATCOMPUTER NEURAL CORE...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MAIN APPLICATION LAYOUT
+         ========================================== -->
+    <div class="batcomputer-layout" id="batcomputerLayout">
+        
+        <!-- ==========================================
+             SIDEBAR: GOTHAM COMMAND TERMINAL
+             ========================================== -->
+        <aside class="sidebar batcomputer-sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-brand-wrap">
+                    <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="ALFRED" class="sidebar-bat-logo">
+                    <div class="brand-text-block">
+                        <span class="brand-nexus-label">ALFRED</span>
+                        <span class="brand-batcomputer-label">BATCOMPUTER</span>
+                    </div>
+                </div>
+
+                <button class="btn-icon-tactical sidebar-close-mobile" id="btnCloseSidebarMobile" title="Close Sidebar">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-scrollable-content">
+                <!-- SECTION: INVESTIGATIONS -->
+                <div class="sidebar-section">
+                    <div class="section-title-wrap">
+                        <span class="section-badge">INV</span>
+                        <span class="section-heading">INVESTIGATIONS</span>
+                    </div>
+                    
+                    <button class="btn-tactical-new-mission" id="btnNewChat">
+                        <span class="btn-pip red-pip"></span>
+                        <span class="btn-text">New Investigation</span>
+                        <span class="btn-kbd">Ctrl+K</span>
+                    </button>
+
+                    <!-- Search Input -->
+                    <div class="case-search-box">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="searchChatsInput" placeholder="Search case archives..." autocomplete="off">
+                    </div>
+
+                    <!-- Case Files / Conversations List -->
+                    <div class="investigations-list-header">
+                        <span>RECENT INVESTIGATIONS</span>
+                        <span class="case-count" id="caseFileCount">0 FILES</span>
+                    </div>
+                    <div class="investigations-list" id="conversationsList">
+                        <div class="conv-skeleton">Querying Batcomputer storage...</div>
+                    </div>
+                </div>
+
+                <!-- SECTION: INTELLIGENCE -->
+                <div class="sidebar-section">
+                    <div class="section-title-wrap">
+                        <span class="section-badge">INTEL</span>
+                        <span class="section-heading">INTELLIGENCE</span>
+                    </div>
+
+                    <div class="tactical-menu-items">
+                        <button class="menu-item-link" onclick="openCharacterModal()">
+                            <span class="menu-bullet">🦇</span>
+                            <span>Character Database</span>
+                            <span class="menu-tag">14 DOSSIERS</span>
+                        </button>
+                        <button class="menu-item-link" onclick="applySuggestion('Activate Gotham Intelligence: Provide a situational assessment of municipal infrastructure, communications, and power telemetry.')">
+                            <span class="menu-bullet">🌐</span>
+                            <span>Gotham Intel</span>
+                        </button>
+                        <button class="menu-item-link" onclick="applySuggestion('Activate Detective Mode: Break down the following case evidence and reconstruct the timeline:')">
+                            <span class="menu-bullet">🕵</span>
+                            <span>Detective Mode</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION: SYSTEMS -->
+                <div class="sidebar-section">
+                    <div class="section-title-wrap">
+                        <span class="section-badge">SYS</span>
+                        <span class="section-heading">SYSTEMS</span>
+                    </div>
+
+                    <div class="tactical-menu-items">
+                        <button class="menu-item-link" onclick="openDiagnosticsModal()">
+                            <span class="menu-bullet">⚙</span>
+                            <span>System Diagnostics</span>
+                            <span class="menu-tag-ok">ONLINE</span>
+                        </button>
+                        <button class="menu-item-link" onclick="toggleAutoTts()">
+                            <span class="menu-bullet">🔊</span>
+                            <span>Voice Engine</span>
+                            <span class="menu-tag" id="sidebarVoiceTag">OFF</span>
+                        </button>
+                        <button class="menu-item-link" onclick="openWayneNetworkModal()">
+                            <span class="menu-bullet">📡</span>
+                            <span>Wayne Network</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION: DATA -->
+                <div class="sidebar-section">
+                    <div class="section-title-wrap">
+                        <span class="section-badge">DATA</span>
+                        <span class="section-heading">DATA</span>
+                    </div>
+
+                    <div class="tactical-menu-items">
+                        <button class="menu-item-link" id="btnExportChat" title="Export current dossier">
+                            <span class="menu-bullet">📥</span>
+                            <span>Export Case Dossier</span>
+                        </button>
+                        <button class="menu-item-link text-danger-hover" id="btnOpenWipeModal" title="Erase stored case files">
+                            <span class="menu-bullet">🗑</span>
+                            <span>Purge Data</span>
+                        </button>
+                        <button class="menu-item-link text-danger-hover" id="btnLogout" title="Terminate Secure Session">
+                            <span class="menu-bullet">🔒</span>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer Profile -->
+            <div class="sidebar-footer">
+                <div class="operative-pill">
+                    <div class="operative-avatar">
+                        <span id="userInitial">{{ username[0]|upper }}</span>
+                        <span class="status-dot-active"></span>
+                    </div>
+                    <div class="operative-info">
+                        <span class="operative-name" id="userNameLabel">{{ username }}</span>
+                        <span class="operative-rank">BATCAVE TERMINAL // LVL 9</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             MAIN BATCOMPUTER COMMAND TERMINAL
+             ========================================== -->
+        <main class="batcomputer-main" id="chatMain">
+            <!-- Top Command Navbar -->
+            <header class="batcomputer-navbar">
+                <div class="navbar-left">
+                    <button class="btn-icon-tactical" id="btnToggleSidebar" title="Toggle Terminal Sidebar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+
+                    <!-- Batcomputer Branding -->
+                    <div class="navbar-brand-block">
+                        <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Batman Logo" class="nav-bat-logo">
+                        <div class="nav-title-column">
+                            <span class="nav-brand-title">ALFRED</span>
+                            <div class="nav-status-row">
+                                <span class="nav-led red-led"></span>
+                                <span class="nav-status-text">BATCOMPUTER ONLINE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Case File Indicator -->
+                    <div class="active-investigation-badge">
+                        <span class="investigation-label">CASE:</span>
+                        <span class="investigation-title" id="activeChatTitle">CASE FILE // New Investigation</span>
+                        <button class="btn-rename-tiny" id="btnRenameChat" title="Rename Investigation">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="navbar-right">
+                    <!-- Model Selector -->
+                    <div class="tactical-selector-wrap">
+                        <span class="selector-tag">MODEL:</span>
+                        <select id="modelSelect" class="tactical-select">
+                            {% for model in models %}
+                            <option value="{{ model.id }}" {% if model.id == default_model %}selected{% endif %}>
+                                {{ model.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status LEDs -->
+                    <div class="nav-telemetry-leds">
+                        <span class="led-item" title="Neural Core: Groq Operational"><span class="led-dot red-glow"></span> NEURAL: ACTIVE</span>
+                        <span class="led-item" title="Voice Synthesis Engine"><span class="led-dot red-glow"></span> VOICE: READY</span>
+                    </div>
+
+                    <!-- Character DB Quick Button -->
+                    <button class="btn-hud-tool" onclick="openCharacterModal()" title="Open Character & Operative Database">
+                        <span>🦇 DOSSIERS</span>
+                    </button>
+
+                    <!-- Voice Auto-Read Toggle -->
+                    <button class="btn-hud-tool" id="btnAutoTtsToggle" title="Toggle Auto Voice Synthesis">
+                        <span id="ttsStatusTag">VOICE: OFF</span>
+                    </button>
+
+                    <!-- Stop Voice Button -->
+                    <button class="btn-hud-tool btn-stop-active hidden" id="btnStopSpeech" title="Silence Voice Synthesis">
+                        <span>STOP VOICE</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Terminal Stream Container -->
+            <div class="terminal-stream-container" id="chatContainer">
+                
+                <!-- ==========================================
+                     CINEMATIC HERO & WELCOME SCREEN
+                     (Uses welcome page.jpg as backdrop)
+                     ========================================== -->
+                <div class="cinematic-hero-section" id="heroWelcome">
+                    <!-- Layered Welcome Backdrop Artwork -->
+                    <div class="hero-artwork-bg" style="background-image: linear-gradient(rgba(0, 0, 0, 0.42), rgba(3, 3, 5, 0.96)), url('{{ url_for('static', filename='images/welcome page.jpg') }}');"></div>
+                    <div class="hero-crimson-overlay"></div>
+                    <div class="hero-hud-grid"></div>
+
+                    <!-- HUD Reticle & Corner Brackets -->
+                    <div class="hero-hud-frame">
+                        <div class="hud-bracket top-left"></div>
+                        <div class="hud-bracket top-right"></div>
+                        <div class="hud-bracket bottom-left"></div>
+                        <div class="hud-bracket bottom-right"></div>
+                        <div class="hud-coords-label">GOTHAM SECTOR 01 // BATCAVE ENCLAVE</div>
+                    </div>
+
+                    <div class="hero-content-inner">
+                        <!-- Batman Red Logo -->
+                        <div class="hero-logo-box">
+                            <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="The Batman Logo" class="hero-bat-logo-img">
+                        </div>
+
+                        <div class="hero-title-group">
+                            <span class="hero-super-title">ALFRED</span>
+                            <h1 class="hero-main-heading">BATCOMPUTER ONLINE</h1>
+                            <p class="hero-prompt-inquiry">"How can I assist you, sir?"</p>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="hero-crimson-divider">
+                            <span class="divider-line"></span>
+                            <span class="divider-bat">🦇</span>
+                            <span class="divider-line"></span>
+                        </div>
+
+                        <!-- Categorized Tactical Prompt Cards -->
+                        <div class="tactical-prompt-grid">
+                            <!-- DETECTIVE MODE -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Detective Mode: Analyze the following evidence and reconstruct the exact sequence of events:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">🕵</span>
+                                    <span class="card-title">DETECTIVE MODE</span>
+                                </div>
+                                <p class="card-desc">Analyze a mystery, document, or forensic problem with deductive precision.</p>
+                            </div>
+
+                            <!-- GOTHAM INTEL -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Gotham Intelligence: Synthesize multi-vector intelligence and identify critical threat patterns:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">🦇</span>
+                                    <span class="card-title">GOTHAM INTEL</span>
+                                </div>
+                                <p class="card-desc">Analyze municipal telemetry, data sources, and extract pivotal insights.</p>
+                            </div>
+
+                            <!-- WAYNE TECH -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Wayne Technologies: Architect a high-performance, fault-tolerant engineering solution for:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">⚙</span>
+                                    <span class="card-title">WAYNE TECH</span>
+                                </div>
+                                <p class="card-desc">Design advanced software architectures, algorithms, and engineering systems.</p>
+                            </div>
+
+                            <!-- CYBER SECURITY -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Cyber Security: Conduct a perimeter vulnerability audit and penetration defense checklist for:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">🔐</span>
+                                    <span class="card-title">CYBER SECURITY</span>
+                                </div>
+                                <p class="card-desc">Audit source code, cryptographic vectors, and harden defensive security.</p>
+                            </div>
+
+                            <!-- SCIENCE -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Science Lab: Explore and synthesize the physical, chemical, or quantum principles behind:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">🧪</span>
+                                    <span class="card-title">SCIENCE LAB</span>
+                                </div>
+                                <p class="card-desc">Explore cutting-edge scientific concepts, physics, and empirical research.</p>
+                            </div>
+
+                            <!-- STRATEGY -->
+                            <div class="tactical-prompt-card" onclick="applySuggestion('Activate Strategic Analysis: Formulate a multi-phase strategic decision matrix and mitigate risk for:')">
+                                <div class="card-hud-scanner"></div>
+                                <div class="card-header-row">
+                                    <span class="card-icon">♟</span>
+                                    <span class="card-title">STRATEGIC ANALYSIS</span>
+                                </div>
+                                <p class="card-desc">Break down complex operational scenarios, trade-offs, and probability trees.</p>
+                            </div>
+                        </div>
+
+                        <!-- Character Database Quick Banner -->
+                        <div class="character-dossier-banner" onclick="openCharacterModal()">
+                            <div class="dossier-banner-left">
+                                <span class="dossier-indicator">CLASSIFIED</span>
+                                <span class="dossier-headline">GOTHAM OPERATIVE & ROGUES GALLERY DATABASE</span>
+                                <span class="dossier-sub">14 Interactive Intelligence Profiles &bull; Tactical Shortcuts</span>
+                            </div>
+                            <span class="btn-dossier-open">ACCESS ROSTER &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Feed -->
+                <div class="messages-list" id="messagesList"></div>
+            </div>
+
+            <!-- ==========================================
+                 AI STREAMING / PROCESSING HUD BANNER
+                 ========================================== -->
+            <div class="neural-processing-hud hidden" id="neuralProcessingHud">
+                <div class="hud-pulse-bar">
+                    <span class="hud-red-spinner"></span>
+                    <div class="hud-processing-text">
+                        <span class="proc-head">BATCOMPUTER // NEURAL PROCESSING...</span>
+                        <span class="proc-sub">ANALYZING INPUT ██████████░░░░ &bull; STREAM CONNECTION: ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 FLOATING BATCOMPUTER PROMPT DOCK
+                 ========================================== -->
+            <div class="batcomputer-input-dock">
+                <!-- Voice Status Radar Banner -->
+                <div class="voice-radar-banner hidden" id="voiceStatusBar">
+                    <div class="radar-frequency-bars">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="voice-radar-text" id="voiceStatusText">BATCOMPUTER LISTENING...</span>
+                    <button class="btn-voice-cancel" id="btnCancelVoice" title="Cancel Transmission">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+
+                <!-- Voice Output Speaking Banner -->
+                <div class="voice-output-banner hidden" id="voiceOutputBanner">
+                    <div class="radar-frequency-bars red-bars">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="voice-output-text">BATCOMPUTER VOICE OUTPUT ACTIVE</span>
+                    <button class="btn-voice-cancel" onclick="stopAllSpeech()" title="Stop Voice">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12"></rect></svg>
+                    </button>
+                </div>
+
+                <!-- Main Input Frame -->
+                <div class="tactical-input-container">
+                    <!-- Futuristic Red Comms Microphone Button -->
+                    <button class="btn-comms-mic" id="btnVoiceInput" title="Toggle Comms Voice Capture">
+                        <div class="comms-radar-ring"></div>
+                        <span class="comms-btn-label" id="commsBtnLabel">COMMS</span>
+                    </button>
+
+                    <!-- Textarea -->
+                    <textarea 
+                        id="userInput" 
+                        class="tactical-textarea" 
+                        placeholder="Transmit query to Batcomputer or speak via Comms... (Shift+Enter for newline)" 
+                        rows="1" 
+                        maxlength="4000"
+                        autofocus
+                    ></textarea>
+
+                    <!-- Tactical Send Action -->
+                    <button class="btn-bat-send" id="btnSendMessage" title="Transmit to Batcomputer (Enter)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="dock-system-tag">
+                    <span>ALFRED &bull; BATCOMPUTER MILITARY ENCLAVE &bull; END-TO-END DATA ISOLATION</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         CHARACTER & AI INTELLIGENCE MODAL (14 Characters)
+         ========================================== -->
+    <div class="modal-backdrop hidden" id="characterModalBackdrop">
+        <div class="character-dossier-modal">
+            <div class="modal-dossier-header">
+                <div class="dossier-title-wrap">
+                    <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Bat Emblem" class="dossier-bat-emblem">
+                    <div>
+                        <h3 class="dossier-main-title">BATCOMPUTER // GOTHAM INTELLIGENCE DOSSIERS</h3>
+                        <span class="dossier-sub-tag">TACTICAL OPERATIVE PROFILES &bull; CLICK TO INITIALIZE THEMED PROMPT</span>
+                    </div>
+                </div>
+                <button class="btn-modal-close" onclick="closeCharacterModal()">&times;</button>
+            </div>
+
+            <div class="character-cards-scrollable">
+                <div class="character-cards-grid" id="characterCardsGrid">
+                    <!-- Generated via JavaScript with 14 Gotham Characters -->
+                </div>
+            </div>
+
+            <div class="modal-dossier-footer">
+                <span class="footer-notice">WAYNE ENTERPRISES SURVEILLANCE &amp; FORENSIC ARCHIVE // LEVEL 9 CLEARANCE</span>
+                <button class="btn-tactical-close" onclick="closeCharacterModal()">CLOSE DOSSIERS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         SECURITY CONFIRMATION MODAL: PURGE DATA
+         ========================================== -->
+    <div class="modal-backdrop hidden" id="wipeModalBackdrop">
+        <div class="tactical-modal-panel">
+            <div class="modal-security-header">
+                <span class="warning-symbol">⚠️</span>
+                <span class="modal-security-title">WARNING // CLASSIFIED DESTRUCTION</span>
+            </div>
+            <div class="modal-body">
+                <h4 class="modal-alert-heading">PURGE ALL CASE FILES &amp; INTEL</h4>
+                <p class="modal-alert-text">
+                    This action permanently deletes all stored intelligence records, conversation transcripts, and telemetry from the Batcomputer enclave.
+                </p>
+                <div class="modal-warning-box">
+                    <span>IRREVERSIBLE ZERO-TRACE PROTOCOL: Recovery is impossible once executed.</span>
+                </div>
+            </div>
+            <div class="modal-actions-tactical">
+                <button class="btn-modal-cancel" id="btnCancelWipe">CANCEL</button>
+                <button class="btn-modal-danger-confirm" id="btnConfirmWipe">ERASE EVERYTHING</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         SYSTEM DIAGNOSTICS MODAL
+         ========================================== -->
+    <div class="modal-backdrop hidden" id="diagnosticsModalBackdrop">
+        <div class="tactical-modal-panel">
+            <div class="modal-security-header">
+                <span class="red-led-pip">●</span>
+                <span class="modal-security-title">BATCOMPUTER // SYSTEM DIAGNOSTICS</span>
+            </div>
+            <div class="diagnostics-grid">
+                <div class="diag-row">
+                    <span class="diag-label">ALFRED SYSTEM</span>
+                    <span class="diag-val diag-ok">ONLINE</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">BATCOMPUTER MAIN TERMINAL</span>
+                    <span class="diag-val diag-ok">ONLINE</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">VOICE SYNTHESIS &amp; COMMS</span>
+                    <span class="diag-val diag-ok">ONLINE</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">GROQ NEURAL CORE</span>
+                    <span class="diag-val diag-ok">CONNECTED</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">WAYNE ENCLAVE LINK</span>
+                    <span class="diag-val diag-ok">SECURE (0.3ms)</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">SESSION SECURITY</span>
+                    <span class="diag-val diag-red">ACTIVE</span>
+                </div>
+            </div>
+            <div class="modal-actions-tactical">
+                <button class="btn-modal-cancel" onclick="closeDiagnosticsModal()">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         WAYNE NETWORK MODAL
+         ========================================== -->
+    <div class="modal-backdrop hidden" id="wayneNetworkModalBackdrop">
+        <div class="tactical-modal-panel">
+            <div class="modal-security-header">
+                <span class="red-led-pip">●</span>
+                <span class="modal-security-title">WAYNE ENTERPRISES // SECURE NODES</span>
+            </div>
+            <div class="diagnostics-grid">
+                <div class="diag-row">
+                    <span class="diag-label">NODE 01: BATCAVE CORE</span>
+                    <span class="diag-val diag-ok">ONLINE (0.2ms)</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">NODE 02: WAYNE TOWER R&amp;D</span>
+                    <span class="diag-val diag-ok">SYNCHRONIZED</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">NODE 03: GOTHAM HARBOR RELAY</span>
+                    <span class="diag-val diag-ok">STANDBY</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">SATELLITE LINK // WAYNE-SAT-4</span>
+                    <span class="diag-val diag-red">ENCRYPTED</span>
+                </div>
+            </div>
+            <div class="modal-actions-tactical">
+                <button class="btn-modal-cancel" onclick="closeWayneNetworkModal()">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         LOGOUT TERMINATION OVERLAY
+         ========================================== -->
+    <div class="logout-sequence-overlay hidden" id="logoutOverlay">
+        <div class="logout-console-box">
+            <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Batcomputer Core" class="logout-logo-img">
+            <div class="logout-log-lines" id="logoutLogs">
+                <div class="log-line">SECURING SESSION...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CDN Libraries: Marked, Highlight.js, DOMPurify -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- App JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

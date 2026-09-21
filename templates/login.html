@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALFRED — Batcomputer Access Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-body batcomputer-theme">
+    <!-- Atmospheric Gotham Backdrop with welcome page.jpg -->
+    <div class="auth-bg-wrapper">
+        <div class="auth-bg-image" style="background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(3, 3, 5, 0.94)), url('{{ url_for('static', filename='images/welcome page.jpg') }}');"></div>
+        <div class="auth-bg-crimson-overlay"></div>
+        <div class="cave-scanlines"></div>
+        <canvas id="rainCanvas" class="ambient-rain-canvas"></canvas>
+        <div class="distant-batsignal red-signal">
+            <div class="batsignal-beam red-beam"></div>
+            <div class="batsignal-core">
+                <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="Bat-Signal" class="batsignal-img-glow">
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <!-- Terminal Header -->
+        <div class="auth-header">
+            <div class="wayne-hud-badge">
+                <span class="hud-led red-led"></span>
+                <span>WAYNE ENTERPRISES // SECURE ENCLAVE NODE 01</span>
+                <span class="hud-coords">[40.7128° N, 74.0060° W]</span>
+            </div>
+
+            <!-- Central Batman Red Logo -->
+            <div class="batman-logo-central">
+                <img src="{{ url_for('static', filename='images/batman red logo.jpg') }}" alt="ALFRED Batcomputer" class="batman-hero-logo">
+            </div>
+
+            <div class="brand-text-block text-center">
+                <h1 class="brand-nexus-title">ALFRED</h1>
+                <span class="brand-nexus-sub">BATCOMPUTER ACCESS TERMINAL</span>
+                <span class="brand-classified-tag">RESTRICTED ACCESS &bull; AUTHORIZED PERSONNEL ONLY</span>
+            </div>
+        </div>
+
+        <!-- Tactical Auth Card -->
+        <div class="auth-card batcomputer-card">
+            <div class="card-corner-bracket top-left"></div>
+            <div class="card-corner-bracket top-right"></div>
+            <div class="card-corner-bracket bottom-left"></div>
+            <div class="card-corner-bracket bottom-right"></div>
+            <div class="hud-scanner-line"></div>
+
+            <!-- Tab Switcher -->
+            <div class="auth-tabs" id="authTabs">
+                <button type="button" class="auth-tab-btn {% if tab != 'register' %}active{% endif %}" id="tabLoginBtn" onclick="switchAuthTab('login')">
+                    <span class="tab-indicator-pip"></span>
+                    <span>AUTHENTICATE</span>
+                </button>
+                <button type="button" class="auth-tab-btn {% if tab == 'register' %}active{% endif %}" id="tabRegisterBtn" onclick="switchAuthTab('register')">
+                    <span class="tab-indicator-pip"></span>
+                    <span>ENROLL OPERATIVE</span>
+                </button>
+            </div>
+
+            <!-- Error Banner -->
+            {% if error %}
+            <div class="tactical-alert-box alert-danger" id="authErrorPill">
+                <span class="alert-icon">⚠</span>
+                <span class="alert-msg">{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Form: Login -->
+            <form id="loginForm" class="auth-form {% if tab == 'register' %}hidden{% endif %}" action="{{ url_for('login') }}" method="POST">
+                <div class="input-group">
+                    <label for="loginUsername">IDENTITY // OPERATIVE CALLSIGN</label>
+                    <div class="tactical-input-wrap">
+                        <span class="input-icon-tactical">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <input type="text" id="loginUsername" name="username" placeholder="Enter operative identity" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="loginPassword">PASSWORD // SECURITY CIPHER</label>
+                    <div class="tactical-input-wrap">
+                        <span class="input-icon-tactical">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </span>
+                        <input type="password" id="loginPassword" name="password" placeholder="••••••••••••" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-bat-primary" id="btnSubmitLogin">
+                    <span>ACCESS BATCOMPUTER</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Form: Register -->
+            <form id="registerForm" class="auth-form {% if tab != 'register' %}hidden{% endif %}" action="{{ url_for('register') }}" method="POST">
+                <div class="input-group">
+                    <label for="regUsername">OPERATIVE DESIGNATION</label>
+                    <div class="tactical-input-wrap">
+                        <span class="input-icon-tactical">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <input type="text" id="regUsername" name="username" placeholder="Designate operative callsign" minlength="3" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="regPassword">SECURITY PASSCODE (MIN. 6 CHARS)</label>
+                    <div class="tactical-input-wrap">
+                        <span class="input-icon-tactical">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </span>
+                        <input type="password" id="regPassword" name="password" placeholder="Create high-entropy passcode" minlength="6" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="regConfirmPassword">CONFIRM PASSCODE</label>
+                    <div class="tactical-input-wrap">
+                        <span class="input-icon-tactical">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <input type="password" id="regConfirmPassword" name="confirm_password" placeholder="Re-enter security passcode" minlength="6" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-bat-primary" id="btnSubmitRegister">
+                    <span>ENROLL OPERATIVE</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Security Assurance -->
+            <div class="auth-security-footer">
+                <div class="sec-stat-pill">
+                    <span class="sec-dot red-accent"></span>
+                    <span>WAYNE CIPHER // SHA256</span>
+                </div>
+                <div class="sec-stat-pill">
+                    <span class="sec-dot red-accent"></span>
+                    <span>BATCAVE ENCLAVE ACTIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-terminal-meta">
+            <span>SECURE BATCOMPUTER TERMINAL &bull; GOTHAM CITY SECTOR 01 &bull; ZERO TRACE PROTOCOL</span>
+        </div>
+    </div>
+
+    <!-- Rain canvas script -->
+    <script>
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLoginBtn = document.getElementById('tabLoginBtn');
+            const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+            const errorPill = document.getElementById('authErrorPill');
+            
+            if (errorPill) errorPill.style.display = 'none';
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLoginBtn.classList.add('active');
+                tabRegisterBtn.classList.remove('active');
+                document.getElementById('loginUsername').focus();
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabLoginBtn.classList.remove('active');
+                tabRegisterBtn.classList.add('active');
+                document.getElementById('regUsername').focus();
+            }
+        }
+
+        // Lightweight Gotham Rain Animation
+        (function initRain() {
+            const canvas = document.getElementById('rainCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+
+            const drops = [];
+            const count = Math.min(80, Math.floor(w / 20));
+            for (let i = 0; i < count; i++) {
+                drops.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    l: 12 + Math.random() * 18,
+                    v: 8 + Math.random() * 12,
+                    c: Math.random() > 0.85 ? 'rgba(255, 30, 30, 0.45)' : 'rgba(160, 160, 160, 0.15)'
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                for (let i = 0; i < drops.length; i++) {
+                    const d = drops[i];
+                    ctx.strokeStyle = d.c;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x + 1, d.y + d.l);
+                    ctx.stroke();
+
+                    d.y += d.v;
+                    d.x += 0.5;
+                    if (d.y > h) {
+                        d.y = -d.l;
+                        d.x = Math.random() * w;
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                draw();
+            }
+        })();
+    </script>
+</body>
+</html>
